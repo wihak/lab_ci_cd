@@ -1,0 +1,54 @@
+name: Calculator CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Скачиваем код
+        uses: actions/checkout@v3
+
+      - name: Устанавливаем Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Устанавливаем flake8
+        run: pip install flake8
+
+      - name: Запускаем flake8
+        run: flake8 . --max-line-length=120 --exit-zero
+
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Скачиваем код
+        uses: actions/checkout@v3
+
+      - name: Устанавливаем Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Устанавливаем Tkinter для Linux
+        run: sudo apt-get update && sudo apt-get install -y python3-tk
+
+      - name: Устанавливаем зависимости Python
+        run: pip install -r requirements.txt
+
+      - name: Запускаем Pytest
+        run: pytest test_MyMath.py --cov=.
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Скачиваем код
+        uses: actions/checkout@v3
+
+      - name: Собираем Docker-образ
+        run: docker build -t my-calculator-app .
